@@ -1,0 +1,980 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Diagnóstico Estratégico da Marca</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+<style>
+:root {
+  --bg:        #0d0d0d;
+  --surface:   #141414;
+  --border:    #2a2a2a;
+  --gold:      #c9a84c;
+  --gold-dim:  #8a6e30;
+  --text:      #e8e2d5;
+  --muted:     #6b6459;
+  --danger:    #c0392b;
+  --radius:    6px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Inter', sans-serif;
+  font-weight: 300;
+  line-height: 1.7;
+  min-height: 100vh;
+}
+
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 0;
+}
+
+.hero {
+  padding: 80px 40px 60px;
+  max-width: 760px;
+  margin: 0 auto;
+  position: relative;
+  z-index: 1;
+}
+
+.hero-label {
+  font-family: 'Inter', monospace;
+  font-size: 10px;
+  letter-spacing: 4px;
+  color: var(--gold);
+  text-transform: uppercase;
+  margin-bottom: 16px;
+  font-weight: 500;
+}
+
+.hero h1 {
+  font-family: 'Inter', sans-serif;
+  font-size: clamp(28px, 4.5vw, 46px);
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -0.5px;
+  margin-bottom: 20px;
+  color: var(--text);
+}
+
+.hero-desc {
+  font-size: 14px;
+  color: var(--muted);
+  max-width: 500px;
+  line-height: 1.65;
+}
+
+.progress-wrap {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(13,13,13,0.92);
+  backdrop-filter: blur(12px);
+  padding: 12px 40px;
+  border-bottom: 1px solid var(--border);
+}
+
+.progress-inner {
+  max-width: 760px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.progress-bar-track {
+  flex: 1;
+  height: 2px;
+  background: var(--border);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background: var(--gold);
+  border-radius: 2px;
+  width: 0%;
+  transition: width 0.4s ease;
+}
+
+.progress-pct {
+  font-family: 'Inter', monospace;
+  font-size: 11px;
+  color: var(--gold);
+  min-width: 36px;
+  text-align: right;
+  font-weight: 500;
+}
+
+form {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 0 40px 80px;
+  position: relative;
+  z-index: 1;
+}
+
+.section-header {
+  margin: 56px 0 32px;
+  position: relative;
+  padding-top: 56px;
+  border-top: 1px solid var(--border);
+}
+
+.section-header:first-of-type { border-top: none; margin-top: 0; }
+
+.section-num {
+  font-family: 'Inter', monospace;
+  font-size: 10px;
+  letter-spacing: 3px;
+  color: var(--gold);
+  text-transform: uppercase;
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+.section-header h2 {
+  font-family: 'Inter', sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  color: var(--text);
+  text-transform: uppercase;
+}
+
+.section-skip {
+  background: rgba(201,168,76,0.06);
+  border: 1px solid var(--gold-dim);
+  border-radius: var(--radius);
+  padding: 14px 18px;
+  font-size: 13px;
+  color: var(--gold-dim);
+  margin-top: 12px;
+}
+
+.field {
+  margin-bottom: 32px;
+  opacity: 0;
+  transform: translateY(16px);
+  animation: fadeUp 0.5s ease forwards;
+}
+
+@keyframes fadeUp {
+  to { opacity: 1; transform: translateY(0); }
+}
+
+label {
+  display: block;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text);
+  margin-bottom: 8px;
+}
+
+label .req {
+  color: var(--gold);
+  margin-left: 3px;
+}
+
+.field-hint {
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 8px;
+  margin-top: -4px;
+}
+
+input[type="text"],
+input[type="email"],
+textarea {
+  width: 100%;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  color: var(--text);
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  font-weight: 300;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  resize: vertical;
+}
+
+input[type="text"]:focus,
+input[type="email"]:focus,
+textarea:focus {
+  border-color: var(--gold-dim);
+  box-shadow: 0 0 0 3px rgba(201,168,76,0.08);
+}
+
+textarea { min-height: 100px; }
+
+.options-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.options-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.opt-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 10px 16px;
+  cursor: pointer;
+  font-size: 13px;
+  transition: border-color 0.2s, background 0.2s;
+  flex: 1;
+  min-width: 160px;
+}
+
+.opt-label:hover {
+  border-color: var(--gold-dim);
+  background: rgba(201,168,76,0.04);
+}
+
+.opt-label input { display: none; }
+
+.opt-dot {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 2px solid var(--border);
+  flex-shrink: 0;
+  transition: border-color 0.2s, background 0.2s;
+  display: flex; align-items: center; justify-content: center;
+}
+
+.opt-dot::after {
+  content: '';
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--gold);
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.opt-check {
+  width: 16px;
+  height: 16px;
+  border-radius: 3px;
+  border: 2px solid var(--border);
+  flex-shrink: 0;
+  transition: border-color 0.2s, background 0.2s;
+  display: flex; align-items: center; justify-content: center;
+}
+
+.opt-check::after {
+  content: '✓';
+  font-size: 10px;
+  color: var(--bg);
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.opt-label:has(input:checked) {
+  border-color: var(--gold);
+  background: rgba(201,168,76,0.07);
+}
+
+.opt-label:has(input[type="radio"]:checked) .opt-dot { border-color: var(--gold); }
+.opt-label:has(input[type="radio"]:checked) .opt-dot::after { opacity: 1; }
+.opt-label:has(input[type="checkbox"]:checked) .opt-check { border-color: var(--gold); background: var(--gold); }
+.opt-label:has(input[type="checkbox"]:checked) .opt-check::after { opacity: 1; }
+
+.personality-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+  padding: 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.personality-label {
+  font-size: 12px;
+  color: var(--muted);
+  min-width: 110px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.personality-label.right { text-align: left; }
+
+input[type="range"] {
+  flex: 1;
+  appearance: none;
+  height: 2px;
+  background: var(--border);
+  border-radius: 2px;
+  outline: none;
+  cursor: pointer;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--gold);
+  cursor: pointer;
+  transition: transform 0.15s;
+}
+
+input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.2); }
+
+.personality-val {
+  font-family: 'Inter', monospace;
+  font-size: 11px;
+  color: var(--gold);
+  min-width: 18px;
+  text-align: center;
+  font-weight: 500;
+}
+
+.other-wrap { margin-top: 8px; }
+.other-wrap input { display: none; }
+.other-wrap.visible input { display: block; }
+
+.submit-area {
+  margin-top: 56px;
+  border-top: 1px solid var(--border);
+  padding-top: 40px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.btn-submit {
+  background: var(--gold);
+  color: #0d0d0d;
+  border: none;
+  border-radius: var(--radius);
+  padding: 16px 48px;
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  transition: opacity 0.2s, transform 0.15s;
+}
+
+.btn-submit:hover { opacity: 0.88; transform: translateY(-1px); }
+.btn-submit:active { transform: translateY(0); }
+.btn-submit:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+.submit-note {
+  font-size: 11px;
+  color: var(--muted);
+  text-align: center;
+}
+
+.toast {
+  position: fixed;
+  bottom: 32px;
+  right: 32px;
+  background: var(--surface);
+  border: 1px solid var(--gold);
+  border-radius: var(--radius);
+  padding: 14px 20px;
+  font-size: 13px;
+  color: var(--text);
+  z-index: 999;
+  transform: translateY(80px);
+  opacity: 0;
+  transition: transform 0.3s ease, opacity 0.3s ease;
+  max-width: 320px;
+}
+
+.toast.show { transform: translateY(0); opacity: 1; }
+.toast.error { border-color: var(--danger); }
+
+.field-error {
+  font-size: 11px;
+  color: var(--danger);
+  margin-top: 5px;
+  display: none;
+}
+
+.field.invalid input,
+.field.invalid textarea { border-color: var(--danger); }
+.field.invalid .field-error { display: block; }
+
+@media (max-width: 600px) {
+  .hero, form { padding-left: 20px; padding-right: 20px; }
+  .progress-wrap { padding-left: 20px; padding-right: 20px; }
+  .opt-label { min-width: 100%; }
+  .personality-row { flex-wrap: wrap; }
+  .personality-label { min-width: unset; text-align: left; }
+}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <p class="hero-label">Assent Agência · Branding</p>
+  <h1>Diagnóstico Estratégico da Marca</h1>
+  <p class="hero-desc">Entenda a essência da sua marca para construir um posicionamento estratégico e uma comunicação alinhada. Responda com calma e o mais detalhado possível.</p>
+</div>
+
+<div class="progress-wrap">
+  <div class="progress-inner">
+    <div class="progress-bar-track">
+      <div class="progress-bar-fill" id="progressFill"></div>
+    </div>
+    <span class="progress-pct" id="progressPct">0%</span>
+  </div>
+</div>
+
+<form id="diagForm" novalidate>
+
+  <!-- EMAIL -->
+  <div class="section-header" style="border-top:none; padding-top:0; margin-top:32px;">
+    <span class="section-num">Identificação</span>
+    <h2>Contato</h2>
+  </div>
+
+  <div class="field" id="f-email">
+    <label for="email">E-mail <span class="req">*</span></label>
+    <input type="email" id="email" name="email" placeholder="seu@email.com" required>
+    <span class="field-error">Campo obrigatório</span>
+  </div>
+
+  <!-- SEÇÃO 1 -->
+  <div class="section-header">
+    <span class="section-num">Seção 01</span>
+    <h2>Identidade da Marca</h2>
+  </div>
+
+  <div class="field" style="animation-delay:.05s" id="f-missao">
+    <label for="missao">1. Qual é a missão da empresa? <span class="req">*</span></label>
+    <p class="field-hint">Por que a empresa existe? Qual problema resolve?</p>
+    <textarea id="missao" name="missao" placeholder="Descreva a missão..." required></textarea>
+    <span class="field-error">Campo obrigatório</span>
+  </div>
+
+  <div class="field" style="animation-delay:.1s" id="f-visao">
+    <label for="visao">2. Qual é a visão da empresa? <span class="req">*</span></label>
+    <p class="field-hint">Onde vocês querem chegar no futuro?</p>
+    <textarea id="visao" name="visao" placeholder="Descreva a visão..." required></textarea>
+    <span class="field-error">Campo obrigatório</span>
+  </div>
+
+  <div class="field" style="animation-delay:.15s" id="f-valores">
+    <label for="valores">3. Quais são os valores da marca? <span class="req">*</span></label>
+    <p class="field-hint">Princípios que guiam decisões e comportamento.</p>
+    <textarea id="valores" name="valores" placeholder="Liste os valores..." required></textarea>
+    <span class="field-error">Campo obrigatório</span>
+  </div>
+
+  <div class="field" style="animation-delay:.2s" id="f-proposito">
+    <label for="proposito">4. Qual é o propósito da marca? <span class="req">*</span></label>
+    <p class="field-hint">Impacto que deseja causar nas pessoas ou na sociedade.</p>
+    <textarea id="proposito" name="proposito" placeholder="Descreva o propósito..." required></textarea>
+    <span class="field-error">Campo obrigatório</span>
+  </div>
+
+  <!-- SEÇÃO 2 -->
+  <div class="section-header">
+    <span class="section-num">Seção 02</span>
+    <h2>Posicionamento</h2>
+  </div>
+
+  <div class="field" style="animation-delay:.05s" id="f-oqueaz">
+    <label for="oqueaz">5. O que a empresa faz exatamente? <span class="req">*</span></label>
+    <textarea id="oqueaz" name="oQueAEmpresaFaz" placeholder="Descreva o core business..." required></textarea>
+    <span class="field-error">Campo obrigatório</span>
+  </div>
+
+  <div class="field" style="animation-delay:.1s">
+    <label for="diferencial">6. Qual é o principal diferencial da empresa?</label>
+    <textarea id="diferencial" name="diferencial" placeholder="O que vocês fazem melhor?"></textarea>
+  </div>
+
+  <div class="field" style="animation-delay:.15s">
+    <label for="porqueEscolher">7. Por que um cliente escolheria vocês e não o concorrente?</label>
+    <textarea id="porqueEscolher" name="porqueEscolher" placeholder="Motivos de escolha..."></textarea>
+  </div>
+
+  <div class="field" style="animation-delay:.2s">
+    <label>8. Como vocês querem que a marca seja percebida?</label>
+    <div class="options-row">
+      <label class="opt-label"><input type="checkbox" name="percepcao" value="Premium"><span class="opt-check"></span> Premium</label>
+      <label class="opt-label"><input type="checkbox" name="percepcao" value="Acessível"><span class="opt-check"></span> Acessível</label>
+      <label class="opt-label"><input type="checkbox" name="percepcao" value="Jovem"><span class="opt-check"></span> Jovem</label>
+      <label class="opt-label"><input type="checkbox" name="percepcao" value="Sofisticada"><span class="opt-check"></span> Sofisticada</label>
+      <label class="opt-label"><input type="checkbox" name="percepcao" value="Prática"><span class="opt-check"></span> Prática</label>
+      <label class="opt-label"><input type="checkbox" name="percepcao" value="Inovadora"><span class="opt-check"></span> Inovadora</label>
+    </div>
+    <div class="other-wrap" id="percepcaoOutroWrap" style="margin-top:8px;">
+      <label class="opt-label" style="max-width:220px;">
+        <input type="checkbox" id="percepcaoOutroChk" onchange="toggleOther('percepcaoOutroWrap','percepcaoOutroVal')">
+        <span class="opt-check"></span> Outro
+      </label>
+      <input type="text" id="percepcaoOutroVal" name="percepcaoOutro" placeholder="Especifique..." style="margin-top:8px; display:none;">
+    </div>
+  </div>
+
+  <!-- SEÇÃO 3 — SKIP -->
+  <div class="section-header">
+    <span class="section-num">Seção 03</span>
+    <h2>Público-alvo</h2>
+    <div class="section-skip">Esta etapa será desenvolvida posteriormente através de pesquisa estratégica. Não é necessário responder agora.</div>
+  </div>
+
+  <!-- SEÇÃO 4 -->
+  <div class="section-header">
+    <span class="section-num">Seção 04</span>
+    <h2>Personalidade da Marca</h2>
+  </div>
+
+  <div class="field" style="animation-delay:.05s" id="f-personalidade">
+    <label>9. Se a marca fosse uma pessoa, ela seria: <span class="req">*</span></label>
+    <p class="field-hint">Mova o controle em direção ao lado que melhor representa a marca.</p>
+
+    <div class="personality-row">
+      <span class="personality-label">Divertida</span>
+      <input type="range" name="p_divertida_seria" min="1" max="5" value="3" oninput="updateSliderVal(this,'pv1')">
+      <span class="personality-val" id="pv1">3</span>
+      <span class="personality-label right">Séria</span>
+    </div>
+    <div class="personality-row">
+      <span class="personality-label">Moderna</span>
+      <input type="range" name="p_moderna_tradicional" min="1" max="5" value="3" oninput="updateSliderVal(this,'pv2')">
+      <span class="personality-val" id="pv2">3</span>
+      <span class="personality-label right">Tradicional</span>
+    </div>
+    <div class="personality-row">
+      <span class="personality-label">Próxima</span>
+      <input type="range" name="p_proxima_formal" min="1" max="5" value="3" oninput="updateSliderVal(this,'pv3')">
+      <span class="personality-val" id="pv3">3</span>
+      <span class="personality-label right">Formal</span>
+    </div>
+    <div class="personality-row">
+      <span class="personality-label">Especialista</span>
+      <input type="range" name="p_especialista_amiga" min="1" max="5" value="3" oninput="updateSliderVal(this,'pv4')">
+      <span class="personality-val" id="pv4">3</span>
+      <span class="personality-label right">Amiga</span>
+    </div>
+  </div>
+
+  <div class="field" style="animation-delay:.1s" id="f-adjetivos">
+    <label for="adjetivos">10. Cite 3 adjetivos que definem a marca: <span class="req">*</span></label>
+    <input type="text" id="adjetivos" name="adjetivos" placeholder="Ex: confiável, inovadora, humana" required>
+    <span class="field-error">Campo obrigatório</span>
+  </div>
+
+  <!-- SEÇÃO 5 -->
+  <div class="section-header">
+    <span class="section-num">Seção 05</span>
+    <h2>Tom de Voz</h2>
+  </div>
+
+  <div class="field" style="animation-delay:.05s" id="f-tomvoz">
+    <label>11. A comunicação deve ser: <span class="req">*</span></label>
+    <div class="options-grid">
+      <label class="opt-label"><input type="radio" name="tomComunicacao" value="Formal" required><span class="opt-dot"></span> Formal</label>
+      <label class="opt-label"><input type="radio" name="tomComunicacao" value="Informal"><span class="opt-dot"></span> Informal</label>
+      <label class="opt-label"><input type="radio" name="tomComunicacao" value="Equilibrada"><span class="opt-dot"></span> Equilibrada</label>
+    </div>
+    <span class="field-error">Selecione uma opção</span>
+  </div>
+
+  <div class="field" style="animation-delay:.1s" id="f-linguagem">
+    <label>12. Linguagem: <span class="req">*</span></label>
+    <div class="options-grid">
+      <label class="opt-label"><input type="radio" name="linguagem" value="Simples e acessível" required><span class="opt-dot"></span> Simples e acessível</label>
+      <label class="opt-label"><input type="radio" name="linguagem" value="Técnica e profissional"><span class="opt-dot"></span> Técnica e profissional</label>
+      <label class="opt-label"><input type="radio" name="linguagem" value="Mistura dos dois"><span class="opt-dot"></span> Mistura dos dois</label>
+    </div>
+    <span class="field-error">Selecione uma opção</span>
+  </div>
+
+  <div class="field" style="animation-delay:.15s" id="f-parecer">
+    <label>13. A marca quer parecer mais: <span class="req">*</span></label>
+    <div class="options-grid">
+      <label class="opt-label"><input type="radio" name="parecerMais" value="Especialista" required><span class="opt-dot"></span> Especialista</label>
+      <label class="opt-label"><input type="radio" name="parecerMais" value="Próxima e acessível"><span class="opt-dot"></span> Próxima e acessível</label>
+      <label class="opt-label"><input type="radio" name="parecerMais" value="Equilíbrio entre os dois"><span class="opt-dot"></span> Equilíbrio entre os dois</label>
+    </div>
+    <span class="field-error">Selecione uma opção</span>
+  </div>
+
+  <!-- SEÇÃO 6 -->
+  <div class="section-header">
+    <span class="section-num">Seção 06</span>
+    <h2>Produtos &amp; Serviços</h2>
+  </div>
+
+  <div class="field" style="animation-delay:.05s" id="f-oqueVende">
+    <label for="oqueVende">14. O que a empresa vende? <span class="req">*</span></label>
+    <textarea id="oqueVende" name="oQueVende" placeholder="Descreva os produtos/serviços..." required></textarea>
+    <span class="field-error">Campo obrigatório</span>
+  </div>
+
+  <div class="field" style="animation-delay:.1s" id="f-prodPrincipal">
+    <label for="prodPrincipal">15. Produto ou serviço principal: <span class="req">*</span></label>
+    <input type="text" id="prodPrincipal" name="produtoPrincipal" placeholder="Nome do produto/serviço principal" required>
+    <span class="field-error">Campo obrigatório</span>
+  </div>
+
+  <div class="field" style="animation-delay:.15s">
+    <label for="prodSecundarios">16. Produtos ou serviços secundários:</label>
+    <textarea id="prodSecundarios" name="produtosSecundarios" placeholder="Liste outros produtos/serviços..."></textarea>
+  </div>
+
+  <div class="field" style="animation-delay:.2s" id="f-comoVender">
+    <label>17. Como pretende vender? <span class="req">*</span></label>
+    <div class="options-row">
+      <label class="opt-label"><input type="checkbox" name="comoVender" value="iFood"><span class="opt-check"></span> iFood</label>
+      <label class="opt-label"><input type="checkbox" name="comoVender" value="99 Food"><span class="opt-check"></span> 99 Food</label>
+      <label class="opt-label"><input type="checkbox" name="comoVender" value="Tráfego pago"><span class="opt-check"></span> Tráfego pago</label>
+      <label class="opt-label"><input type="checkbox" name="comoVender" value="Tráfego orgânico"><span class="opt-check"></span> Tráfego orgânico</label>
+      <label class="opt-label" style="flex-basis:100%;"><input type="checkbox" name="comoVender" value="Todas as opções"><span class="opt-check"></span> Todas as opções</label>
+    </div>
+    <span class="field-error">Selecione ao menos uma opção</span>
+  </div>
+
+  <div class="field" style="animation-delay:.25s" id="f-atendimento">
+    <label for="atendimento">18. Como funciona o atendimento? <span class="req">*</span></label>
+    <textarea id="atendimento" name="atendimento" placeholder="Descreva o processo de atendimento..." required></textarea>
+    <span class="field-error">Campo obrigatório</span>
+  </div>
+
+  <div class="field" style="animation-delay:.3s" id="f-diferenciaisServ">
+    <label for="diferenciaisServ">19. Diferenciais do serviço: <span class="req">*</span></label>
+    <textarea id="diferenciaisServ" name="diferenciaisServico" placeholder="O que destaca o atendimento/serviço?" required></textarea>
+    <span class="field-error">Campo obrigatório</span>
+  </div>
+
+  <!-- SEÇÃO 7 — SKIP -->
+  <div class="section-header">
+    <span class="section-num">Seção 07</span>
+    <h2>Concorrentes</h2>
+    <div class="section-skip">A análise de concorrência será realizada estrategicamente. Não é necessário responder.</div>
+  </div>
+
+  <!-- SEÇÃO 8 -->
+  <div class="section-header">
+    <span class="section-num">Seção 08</span>
+    <h2>Identidade Visual</h2>
+  </div>
+
+  <div class="field" style="animation-delay:.05s" id="f-cores">
+    <label for="cores">20. Quais são as cores da marca? <span class="req">*</span></label>
+    <input type="text" id="cores" name="coresMarca" placeholder="Ex: azul marinho, dourado, branco" required>
+    <span class="field-error">Campo obrigatório</span>
+  </div>
+
+  <div class="field" style="animation-delay:.1s" id="f-logo">
+    <label>21. A marca possui logotipo? <span class="req">*</span></label>
+    <div class="options-grid">
+      <label class="opt-label"><input type="radio" name="possuiLogotipo" value="Sim" required><span class="opt-dot"></span> Sim</label>
+      <label class="opt-label"><input type="radio" name="possuiLogotipo" value="Não"><span class="opt-dot"></span> Não</label>
+      <label class="opt-label"><input type="radio" name="possuiLogotipo" value="Em desenvolvimento"><span class="opt-dot"></span> Em desenvolvimento</label>
+    </div>
+    <span class="field-error">Selecione uma opção</span>
+  </div>
+
+  <!-- SEÇÃO 9 -->
+  <div class="section-header">
+    <span class="section-num">Seção 09</span>
+    <h2>Objetivo do Instagram</h2>
+  </div>
+
+  <div class="field" style="animation-delay:.05s" id="f-objInsta">
+    <label>22. Qual é o principal objetivo do Instagram? <span class="req">*</span></label>
+    <div class="options-row">
+      <label class="opt-label"><input type="checkbox" name="objetivoInstagram" value="Gerar autoridade"><span class="opt-check"></span> Gerar autoridade</label>
+      <label class="opt-label"><input type="checkbox" name="objetivoInstagram" value="Portfólio"><span class="opt-check"></span> Portfólio</label>
+      <label class="opt-label"><input type="checkbox" name="objetivoInstagram" value="Atrair novos clientes"><span class="opt-check"></span> Atrair novos clientes</label>
+      <label class="opt-label"><input type="checkbox" name="objetivoInstagram" value="Gerar vendas"><span class="opt-check"></span> Gerar vendas</label>
+      <label class="opt-label"><input type="checkbox" name="objetivoInstagram" value="Criar comunidade"><span class="opt-check"></span> Criar comunidade</label>
+      <label class="opt-label"><input type="checkbox" name="objetivoInstagram" value="Educar o público"><span class="opt-check"></span> Educar o público</label>
+    </div>
+    <span class="field-error">Selecione ao menos uma opção</span>
+  </div>
+
+  <!-- SEÇÃO 10 -->
+  <div class="section-header">
+    <span class="section-num">Seção 10</span>
+    <h2>Metas Iniciais</h2>
+  </div>
+
+  <div class="field" style="animation-delay:.05s">
+    <label for="clientesMes">23. Quantos clientes desejam atender por mês?</label>
+    <input type="text" id="clientesMes" name="clientesPorMes" placeholder="Ex: 50">
+  </div>
+
+  <div class="field" style="animation-delay:.1s" id="f-sucesso6m">
+    <label>24. O que seria sucesso para a marca em 6 meses? <span class="req">*</span></label>
+    <div class="options-grid">
+      <label class="opt-label"><input type="radio" name="sucesso6meses" value="Crescer localmente" required><span class="opt-dot"></span> Crescer localmente</label>
+      <label class="opt-label"><input type="radio" name="sucesso6meses" value="Expandir para outras regiões"><span class="opt-dot"></span> Expandir para outras regiões</label>
+      <label class="opt-label"><input type="radio" name="sucesso6meses" value="Ainda não definido"><span class="opt-dot"></span> Ainda não definido</label>
+    </div>
+    <span class="field-error">Selecione uma opção</span>
+  </div>
+
+  <!-- SUBMIT -->
+  <div class="submit-area">
+    <button type="submit" class="btn-submit" id="btnSubmit">Salvar diagnóstico em Excel</button>
+    <p class="submit-note">Os dados são salvos localmente no seu computador. Nenhuma informação é enviada para a internet.</p>
+  </div>
+
+</form>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── Progress ──────────────────────────────────────────────────────────────
+function updateProgress() {
+  const inputs = document.querySelectorAll('input:not([type="range"]), textarea');
+  let filled = 0;
+  inputs.forEach(el => {
+    if (el.type === 'checkbox' || el.type === 'radio') {
+      if (document.querySelector(`[name="${el.name}"]:checked`)) filled++;
+    } else if (el.value.trim()) filled++;
+  });
+  const unique = new Set([...inputs].map(i => i.name)).size;
+  const pct = Math.min(100, Math.round((filled / unique) * 100));
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressPct').textContent = pct + '%';
+}
+
+document.getElementById('diagForm').addEventListener('input', updateProgress);
+
+function updateSliderVal(el, id) {
+  document.getElementById(id).textContent = el.value;
+}
+
+function toggleOther(wrapId, inputId) {
+  const input = document.getElementById(inputId);
+  input.style.display = input.style.display === 'none' ? 'block' : 'none';
+}
+
+function showToast(msg, isError = false) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast' + (isError ? ' error' : '');
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 5000);
+}
+
+// ── Validation ────────────────────────────────────────────────────────────
+function validate() {
+  let valid = true;
+
+  document.querySelectorAll('input[required], textarea[required]').forEach(el => {
+    const field = el.closest('.field');
+    if (!el.value.trim()) {
+      field && field.classList.add('invalid');
+      valid = false;
+    } else {
+      field && field.classList.remove('invalid');
+    }
+  });
+
+  const email = document.getElementById('email');
+  const emailField = document.getElementById('f-email');
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value)) {
+    emailField.classList.add('invalid');
+    valid = false;
+  } else {
+    emailField.classList.remove('invalid');
+  }
+
+  const radioGroups = {
+    'f-tomvoz':   'tomComunicacao',
+    'f-linguagem':'linguagem',
+    'f-parecer':  'parecerMais',
+    'f-logo':     'possuiLogotipo',
+    'f-sucesso6m':'sucesso6meses',
+  };
+
+  Object.entries(radioGroups).forEach(([fieldId, name]) => {
+    const field = document.getElementById(fieldId);
+    if (!document.querySelector(`[name="${name}"]:checked`)) {
+      field && field.classList.add('invalid');
+      valid = false;
+    } else {
+      field && field.classList.remove('invalid');
+    }
+  });
+
+  const checkReqs = {
+    'f-comoVender': 'comoVender',
+    'f-objInsta':   'objetivoInstagram'
+  };
+
+  Object.entries(checkReqs).forEach(([fieldId, name]) => {
+    const field = document.getElementById(fieldId);
+    if (!document.querySelector(`[name="${name}"]:checked`)) {
+      field && field.classList.add('invalid');
+      valid = false;
+    } else {
+      field && field.classList.remove('invalid');
+    }
+  });
+
+  return valid;
+}
+
+// ── Collect data ──────────────────────────────────────────────────────────
+function collectData() {
+  const get = (id) => (document.getElementById(id) || {}).value?.trim() || '';
+  const getRadio = (name) => (document.querySelector(`[name="${name}"]:checked`) || {}).value || '';
+  const getChecks = (name) => [...document.querySelectorAll(`[name="${name}"]:checked`)].map(e => e.value);
+  const getSlider = (name) => Number(document.querySelector(`[name="${name}"]`)?.value ?? 3);
+
+  const percepcaoOutro = document.getElementById('percepcaoOutroChk').checked
+    ? get('percepcaoOutroVal') : '';
+
+  return {
+    email: get('email'),
+    missao: get('missao'),
+    visao: get('visao'),
+    valores: get('valores'),
+    proposito: get('proposito'),
+    oQueAEmpresaFaz: get('oqueaz'),
+    diferencial: get('diferencial'),
+    porqueEscolher: get('porqueEscolher'),
+    percepcao: [...getChecks('percepcao'), ...(percepcaoOutro ? [percepcaoOutro] : [])].join(', '),
+    personalidade_divertida_seria: getSlider('p_divertida_seria'),
+    personalidade_moderna_tradicional: getSlider('p_moderna_tradicional'),
+    personalidade_proxima_formal: getSlider('p_proxima_formal'),
+    personalidade_especialista_amiga: getSlider('p_especialista_amiga'),
+    adjetivos: get('adjetivos'),
+    tomComunicacao: getRadio('tomComunicacao'),
+    linguagem: getRadio('linguagem'),
+    parecerMais: getRadio('parecerMais'),
+    oQueVende: get('oqueVende'),
+    produtoPrincipal: get('prodPrincipal'),
+    produtosSecundarios: get('prodSecundarios'),
+    comoVender: getChecks('comoVender').join(', '),
+    atendimento: get('atendimento'),
+    diferenciaisServico: get('diferenciaisServ'),
+    coresMarca: get('cores'),
+    possuiLogotipo: getRadio('possuiLogotipo'),
+    objetivoInstagram: getChecks('objetivoInstagram').join(', '),
+    clientesPorMes: get('clientesMes'),
+    sucesso6meses: getRadio('sucesso6meses'),
+    dataPreenchimento: new Date().toLocaleString('pt-BR')
+  };
+}
+
+// ── Export Excel ──────────────────────────────────────────────────────────
+function exportToExcel(data) {
+  const labels = {
+    email: 'E-mail',
+    missao: '1. Missão',
+    visao: '2. Visão',
+    valores: '3. Valores',
+    proposito: '4. Propósito',
+    oQueAEmpresaFaz: '5. O que a empresa faz',
+    diferencial: '6. Diferencial',
+    porqueEscolher: '7. Por que escolher',
+    percepcao: '8. Percepção desejada',
+    personalidade_divertida_seria: '9a. Divertida (1) → Séria (5)',
+    personalidade_moderna_tradicional: '9b. Moderna (1) → Tradicional (5)',
+    personalidade_proxima_formal: '9c. Próxima (1) → Formal (5)',
+    personalidade_especialista_amiga: '9d. Especialista (1) → Amiga (5)',
+    adjetivos: '10. Adjetivos',
+    tomComunicacao: '11. Tom de comunicação',
+    linguagem: '12. Linguagem',
+    parecerMais: '13. Parecer mais',
+    oQueVende: '14. O que vende',
+    produtoPrincipal: '15. Produto principal',
+    produtosSecundarios: '16. Produtos secundários',
+    comoVender: '17. Como pretende vender',
+    atendimento: '18. Atendimento',
+    diferenciaisServico: '19. Diferenciais do serviço',
+    coresMarca: '20. Cores da marca',
+    possuiLogotipo: '21. Possui logotipo',
+    objetivoInstagram: '22. Objetivo do Instagram',
+    clientesPorMes: '23. Clientes por mês',
+    sucesso6meses: '24. Sucesso em 6 meses',
+    dataPreenchimento: 'Data de preenchimento'
+  };
+
+  // Formato vertical: Campo | Resposta
+  const rows = Object.entries(labels).map(([key, label]) => ({
+    'Campo': label,
+    'Resposta': data[key] ?? ''
+  }));
+
+  const ws = XLSX.utils.json_to_sheet(rows);
+
+  // Largura das colunas
+  ws['!cols'] = [{ wch: 38 }, { wch: 80 }];
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Diagnóstico de Marca');
+
+  const email = data.email.replace(/[^a-zA-Z0-9]/g, '_');
+  const now = new Date();
+  const stamp = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}`;
+  const filename = `diagnostico_${email}_${stamp}.xlsx`;
+
+  XLSX.writeFile(wb, filename);
+}
+
+// ── Submit ─────────────────────────────────────────────────────────────────
+document.getElementById('diagForm').addEventListener('submit', (e) => {
+  e.preventDefault();
+
+  if (!validate()) {
+    showToast('Preencha todos os campos obrigatórios.', true);
+    document.querySelector('.field.invalid')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    return;
+  }
+
+  const btn = document.getElementById('btnSubmit');
+  btn.disabled = true;
+  btn.textContent = 'Gerando Excel...';
+
+  try {
+    const data = collectData();
+    exportToExcel(data);
+    showToast('✓ Excel gerado e baixado com sucesso!');
+    btn.textContent = 'Excel salvo ✓';
+    setTimeout(() => {
+      btn.disabled = false;
+      btn.textContent = 'Salvar diagnóstico em Excel';
+    }, 3000);
+  } catch (err) {
+    console.error(err);
+    showToast('Erro ao gerar o Excel: ' + err.message, true);
+    btn.disabled = false;
+    btn.textContent = 'Salvar diagnóstico em Excel';
+  }
+});
+</script>
+</body>
+</html>
