@@ -7,7 +7,6 @@
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
 <style>
 :root {
@@ -650,15 +649,9 @@ input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.2); }
   </div>
 
   <div class="field" style="animation-delay:.2s" id="f-comoVender">
-    <label>17. Como pretende vender? <span class="req">*</span></label>
-    <div class="options-row">
-      <label class="opt-label"><input type="checkbox" name="comoVender" value="iFood"><span class="opt-check"></span> iFood</label>
-      <label class="opt-label"><input type="checkbox" name="comoVender" value="99 Food"><span class="opt-check"></span> 99 Food</label>
-      <label class="opt-label"><input type="checkbox" name="comoVender" value="Tráfego pago"><span class="opt-check"></span> Tráfego pago</label>
-      <label class="opt-label"><input type="checkbox" name="comoVender" value="Tráfego orgânico"><span class="opt-check"></span> Tráfego orgânico</label>
-      <label class="opt-label" style="flex-basis:100%;"><input type="checkbox" name="comoVender" value="Todas as opções"><span class="opt-check"></span> Todas as opções</label>
-    </div>
-    <span class="field-error">Selecione ao menos uma opção</span>
+    <label for="comoVenderOutros">17. Outros — como pretende vender? <span class="req">*</span></label>
+    <input type="text" id="comoVenderOutros" name="comoVender" placeholder="Ex: WhatsApp, loja física, marketplace próprio..." required>
+    <span class="field-error">Campo obrigatório</span>
   </div>
 
   <div class="field" style="animation-delay:.25s" id="f-atendimento">
@@ -733,26 +726,39 @@ input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.2); }
   </div>
 
   <div class="field" style="animation-delay:.1s" id="f-sucesso6m">
-    <label>24. O que seria sucesso para a marca em 6 meses? <span class="req">*</span></label>
-    <div class="options-grid">
-      <label class="opt-label"><input type="radio" name="sucesso6meses" value="Crescer localmente" required><span class="opt-dot"></span> Crescer localmente</label>
-      <label class="opt-label"><input type="radio" name="sucesso6meses" value="Expandir para outras regiões"><span class="opt-dot"></span> Expandir para outras regiões</label>
-      <label class="opt-label"><input type="radio" name="sucesso6meses" value="Ainda não definido"><span class="opt-dot"></span> Ainda não definido</label>
-    </div>
-    <span class="field-error">Selecione uma opção</span>
+    <label for="sucesso6meses">24. O que seria sucesso para a marca em 6 meses? <span class="req">*</span></label>
+    <input type="text" id="sucesso6meses" name="sucesso6meses" placeholder="ter x clientes em 6 meses" required>
+    <span class="field-error">Campo obrigatório</span>
   </div>
 
   <!-- SUBMIT -->
   <div class="submit-area">
-    <button type="submit" class="btn-submit" id="btnSubmit">Salvar diagnóstico em Excel</button>
-    <p class="submit-note">Os dados são salvos localmente no seu computador. Nenhuma informação é enviada para a internet.</p>
+    <button type="submit" class="btn-submit" id="btnSubmit">Salvar diagnóstico</button>
+    <p class="submit-note">Os dados são enviados de forma segura e salvos na nuvem.</p>
   </div>
 
 </form>
 
 <div class="toast" id="toast"></div>
 
-<script>
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
+import { getFirestore, doc, setDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+
+// ── Firebase config ────────────────────────────────────────────────────────
+// TODO: substitua pelas suas credenciais do projeto Firebase
+const firebaseConfig = {
+  apiKey:            "SUA_API_KEY",
+  authDomain:        "SEU_PROJETO.firebaseapp.com",
+  projectId:         "SEU_PROJETO",
+  storageBucket:     "SEU_PROJETO.appspot.com",
+  messagingSenderId: "SEU_SENDER_ID",
+  appId:             "SEU_APP_ID"
+};
+
+const app = initializeApp(firebaseConfig);
+const db  = getFirestore(app);
+
 // ── Progress ──────────────────────────────────────────────────────────────
 function updateProgress() {
   const inputs = document.querySelectorAll('input:not([type="range"]), textarea');
@@ -773,11 +779,13 @@ document.getElementById('diagForm').addEventListener('input', updateProgress);
 function updateSliderVal(el, id) {
   document.getElementById(id).textContent = el.value;
 }
+window.updateSliderVal = updateSliderVal;
 
 function toggleOther(wrapId, inputId) {
   const input = document.getElementById(inputId);
   input.style.display = input.style.display === 'none' ? 'block' : 'none';
 }
+window.toggleOther = toggleOther;
 
 function showToast(msg, isError = false) {
   const t = document.getElementById('toast');
@@ -791,7 +799,9 @@ function showToast(msg, isError = false) {
 function validate() {
   let valid = true;
 
+  // Campos de texto/textarea com required
   document.querySelectorAll('input[required], textarea[required]').forEach(el => {
+    if (el.type === 'radio') return; // radio tratado abaixo
     const field = el.closest('.field');
     if (!el.value.trim()) {
       field && field.classList.add('invalid');
@@ -801,6 +811,7 @@ function validate() {
     }
   });
 
+  // Email
   const email = document.getElementById('email');
   const emailField = document.getElementById('f-email');
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value)) {
@@ -810,12 +821,12 @@ function validate() {
     emailField.classList.remove('invalid');
   }
 
+  // Radio obrigatórios
   const radioGroups = {
     'f-tomvoz':   'tomComunicacao',
     'f-linguagem':'linguagem',
     'f-parecer':  'parecerMais',
     'f-logo':     'possuiLogotipo',
-    'f-sucesso6m':'sucesso6meses',
   };
 
   Object.entries(radioGroups).forEach(([fieldId, name]) => {
@@ -828,9 +839,9 @@ function validate() {
     }
   });
 
+  // Checkboxes obrigatórios
   const checkReqs = {
-    'f-comoVender': 'comoVender',
-    'f-objInsta':   'objetivoInstagram'
+    'f-objInsta': 'objetivoInstagram'
   };
 
   Object.entries(checkReqs).forEach(([fieldId, name]) => {
@@ -847,9 +858,10 @@ function validate() {
 }
 
 // ── Collect data ──────────────────────────────────────────────────────────
+// Estrutura bem definida para uso futuro no visualizador
 function collectData() {
-  const get = (id) => (document.getElementById(id) || {}).value?.trim() || '';
-  const getRadio = (name) => (document.querySelector(`[name="${name}"]:checked`) || {}).value || '';
+  const get       = (id)   => (document.getElementById(id) || {}).value?.trim() || '';
+  const getRadio  = (name) => (document.querySelector(`[name="${name}"]:checked`) || {}).value || '';
   const getChecks = (name) => [...document.querySelectorAll(`[name="${name}"]:checked`)].map(e => e.value);
   const getSlider = (name) => Number(document.querySelector(`[name="${name}"]`)?.value ?? 3);
 
@@ -857,96 +869,81 @@ function collectData() {
     ? get('percepcaoOutroVal') : '';
 
   return {
+    // ── Identificação
     email: get('email'),
-    missao: get('missao'),
-    visao: get('visao'),
+
+    // ── Seção 01 — Propósito
+    missao:  get('missao'),
+    visao:   get('visao'),
     valores: get('valores'),
     proposito: get('proposito'),
+
+    // ── Seção 02 — Posicionamento
     oQueAEmpresaFaz: get('oqueaz'),
-    diferencial: get('diferencial'),
-    porqueEscolher: get('porqueEscolher'),
-    percepcao: [...getChecks('percepcao'), ...(percepcaoOutro ? [percepcaoOutro] : [])].join(', '),
-    personalidade_divertida_seria: getSlider('p_divertida_seria'),
-    personalidade_moderna_tradicional: getSlider('p_moderna_tradicional'),
-    personalidade_proxima_formal: getSlider('p_proxima_formal'),
-    personalidade_especialista_amiga: getSlider('p_especialista_amiga'),
+    diferencial:     get('diferencial'),
+    porqueEscolher:  get('porqueEscolher'),
+    percepcaoDesejada: [
+      ...getChecks('percepcao'),
+      ...(percepcaoOutro ? [percepcaoOutro] : [])
+    ],
+
+    // ── Seção 04 — Personalidade
+    personalidade: {
+      divertida_seria:         getSlider('p_divertida_seria'),
+      moderna_tradicional:     getSlider('p_moderna_tradicional'),
+      proxima_formal:          getSlider('p_proxima_formal'),
+      especialista_amiga:      getSlider('p_especialista_amiga'),
+    },
     adjetivos: get('adjetivos'),
+
+    // ── Seção 05 — Tom de Voz
     tomComunicacao: getRadio('tomComunicacao'),
-    linguagem: getRadio('linguagem'),
-    parecerMais: getRadio('parecerMais'),
-    oQueVende: get('oqueVende'),
-    produtoPrincipal: get('prodPrincipal'),
+    linguagem:      getRadio('linguagem'),
+    parecerMais:    getRadio('parecerMais'),
+
+    // ── Seção 06 — Produtos & Serviços
+    oQueVende:           get('oqueVende'),
+    produtoPrincipal:    get('prodPrincipal'),
     produtosSecundarios: get('prodSecundarios'),
-    comoVender: getChecks('comoVender').join(', '),
-    atendimento: get('atendimento'),
+    comoVender:          get('comoVenderOutros'),   // campo de texto livre
+    atendimento:         get('atendimento'),
     diferenciaisServico: get('diferenciaisServ'),
-    coresMarca: get('cores'),
+
+    // ── Seção 08 — Identidade Visual
+    coresMarca:     get('cores'),
     possuiLogotipo: getRadio('possuiLogotipo'),
-    objetivoInstagram: getChecks('objetivoInstagram').join(', '),
+
+    // ── Seção 09 — Instagram
+    objetivoInstagram: getChecks('objetivoInstagram'),
+
+    // ── Seção 10 — Metas
     clientesPorMes: get('clientesMes'),
-    sucesso6meses: getRadio('sucesso6meses'),
-    dataPreenchimento: new Date().toLocaleString('pt-BR')
+    sucesso6meses:  get('sucesso6meses'),           // campo de texto livre
+
+    // ── Metadados
+    dataPreenchimento: new Date().toISOString(),
+    versaoFormulario:  '2.0',
   };
 }
 
-// ── Export Excel ──────────────────────────────────────────────────────────
-function exportToExcel(data) {
-  const labels = {
-    email: 'E-mail',
-    missao: '1. Missão',
-    visao: '2. Visão',
-    valores: '3. Valores',
-    proposito: '4. Propósito',
-    oQueAEmpresaFaz: '5. O que a empresa faz',
-    diferencial: '6. Diferencial',
-    porqueEscolher: '7. Por que escolher',
-    percepcao: '8. Percepção desejada',
-    personalidade_divertida_seria: '9a. Divertida (1) → Séria (5)',
-    personalidade_moderna_tradicional: '9b. Moderna (1) → Tradicional (5)',
-    personalidade_proxima_formal: '9c. Próxima (1) → Formal (5)',
-    personalidade_especialista_amiga: '9d. Especialista (1) → Amiga (5)',
-    adjetivos: '10. Adjetivos',
-    tomComunicacao: '11. Tom de comunicação',
-    linguagem: '12. Linguagem',
-    parecerMais: '13. Parecer mais',
-    oQueVende: '14. O que vende',
-    produtoPrincipal: '15. Produto principal',
-    produtosSecundarios: '16. Produtos secundários',
-    comoVender: '17. Como pretende vender',
-    atendimento: '18. Atendimento',
-    diferenciaisServico: '19. Diferenciais do serviço',
-    coresMarca: '20. Cores da marca',
-    possuiLogotipo: '21. Possui logotipo',
-    objetivoInstagram: '22. Objetivo do Instagram',
-    clientesPorMes: '23. Clientes por mês',
-    sucesso6meses: '24. Sucesso em 6 meses',
-    dataPreenchimento: 'Data de preenchimento'
-  };
+// ── Salvar no Firebase ────────────────────────────────────────────────────
+// Caminho: formularios/{email}
+// O email é sanitizado para uso como document ID (sem caracteres inválidos)
+async function saveToFirebase(data) {
+  // Firestore não aceita '.' em document ID — substituímos por '_'
+  const docId = data.email.toLowerCase().replace(/[^a-z0-9@_-]/g, '_');
 
-  // Formato vertical: Campo | Resposta
-  const rows = Object.entries(labels).map(([key, label]) => ({
-    'Campo': label,
-    'Resposta': data[key] ?? ''
-  }));
+  const ref = doc(db, 'formularios', docId);
 
-  const ws = XLSX.utils.json_to_sheet(rows);
-
-  // Largura das colunas
-  ws['!cols'] = [{ wch: 38 }, { wch: 80 }];
-
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, 'Diagnóstico de Marca');
-
-  const email = data.email.replace(/[^a-zA-Z0-9]/g, '_');
-  const now = new Date();
-  const stamp = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}`;
-  const filename = `diagnostico_${email}_${stamp}.xlsx`;
-
-  XLSX.writeFile(wb, filename);
+  await setDoc(ref, {
+    ...data,
+    // Sobrescreve timestamp com valor do servidor para confiabilidade
+    dataPreenchimento: serverTimestamp(),
+  }, { merge: true }); // merge: true preserva campos anteriores se o doc existir
 }
 
 // ── Submit ─────────────────────────────────────────────────────────────────
-document.getElementById('diagForm').addEventListener('submit', (e) => {
+document.getElementById('diagForm').addEventListener('submit', async (e) => {
   e.preventDefault();
 
   if (!validate()) {
@@ -957,22 +954,22 @@ document.getElementById('diagForm').addEventListener('submit', (e) => {
 
   const btn = document.getElementById('btnSubmit');
   btn.disabled = true;
-  btn.textContent = 'Gerando Excel...';
+  btn.textContent = 'Salvando...';
 
   try {
     const data = collectData();
-    exportToExcel(data);
-    showToast('✓ Excel gerado e baixado com sucesso!');
-    btn.textContent = 'Excel salvo ✓';
+    await saveToFirebase(data);
+    showToast('✓ Diagnóstico salvo com sucesso!');
+    btn.textContent = 'Diagnóstico salvo ✓';
     setTimeout(() => {
       btn.disabled = false;
-      btn.textContent = 'Salvar diagnóstico em Excel';
+      btn.textContent = 'Salvar diagnóstico';
     }, 3000);
   } catch (err) {
-    console.error(err);
-    showToast('Erro ao gerar o Excel: ' + err.message, true);
+    console.error('[Firebase] Erro ao salvar:', err);
+    showToast('Erro ao salvar: ' + (err.message || 'tente novamente.'), true);
     btn.disabled = false;
-    btn.textContent = 'Salvar diagnóstico em Excel';
+    btn.textContent = 'Salvar diagnóstico';
   }
 });
 </script>
