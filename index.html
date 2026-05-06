@@ -782,8 +782,10 @@ function updateSliderVal(el, id) {
 window.updateSliderVal = updateSliderVal;
 
 function toggleOther(wrapId, inputId) {
+  const chk   = document.getElementById('percepcaoOutroChk');
   const input = document.getElementById(inputId);
-  input.style.display = input.style.display === 'none' ? 'block' : 'none';
+  input.style.display = chk.checked ? 'block' : 'none';
+  if (!chk.checked) input.value = '';
 }
 window.toggleOther = toggleOther;
 
@@ -905,7 +907,7 @@ function collectData() {
     oQueVende:           get('oqueVende'),
     produtoPrincipal:    get('prodPrincipal'),
     produtosSecundarios: get('prodSecundarios'),
-    comoVender:          get('comoVenderOutros'),   // campo de texto livre
+    comoVender:          get('comoVenderOutros'),   // canal de vendas
     atendimento:         get('atendimento'),
     diferenciaisServico: get('diferenciaisServ'),
 
@@ -930,13 +932,19 @@ function collectData() {
 // Caminho: formularios/{email}
 // O email é sanitizado para uso como document ID (sem caracteres inválidos)
 async function saveToFirebase(data) {
-  // Firestore não aceita '.' em document ID — substituímos por '_'
-  const docId = data.email.toLowerCase().replace(/[^a-z0-9@_-]/g, '_');
+  // Sanitiza email para uso como document ID no Firestore
+  // Remove todos os caracteres não permitidos, incluindo '@' e '.'
+  const docId = data.email.toLowerCase().replace(/[^a-z0-9_-]/g, '_');
 
-  const ref = doc(db, 'formularios', docId);
+  // Garante que o docId não seja vazio (fallback seguro)
+  const safeDocId = docId || 'sem_email_' + Date.now();
+
+  const ref = doc(db, 'formularios', safeDocId);
 
   await setDoc(ref, {
     ...data,
+    // emailOriginal preservado como campo legível na coleção
+    emailOriginal: data.email,
     // Sobrescreve timestamp com valor do servidor para confiabilidade
     dataPreenchimento: serverTimestamp(),
   }, { merge: true }); // merge: true preserva campos anteriores se o doc existir
@@ -967,7 +975,8 @@ document.getElementById('diagForm').addEventListener('submit', async (e) => {
     }, 3000);
   } catch (err) {
     console.error('[Firebase] Erro ao salvar:', err);
-    showToast('Erro ao salvar: ' + (err.message || 'tente novamente.'), true);
+    const msg = err?.message || err?.code || 'verifique sua conexão e tente novamente.';
+    showToast('Erro ao salvar: ' + msg, true);
     btn.disabled = false;
     btn.textContent = 'Salvar diagnóstico';
   }
