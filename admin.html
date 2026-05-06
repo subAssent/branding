@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>404 — Página não encontrada</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#08090a;--surface:#0f1012;--card:#141619;--border:#1e2124;--gold:#d4a853;--gold-dim:#8c6a2e;--gold-glow:rgba(212,168,83,.08);--text:#ddd8cf;--muted:#5a5650;--dim:#2e2c29;--danger:#c0392b;--success:#27ae60;--warn:#e67e22;--r:8px}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}html,body{height:100%}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;font-weight:300;line-height:1.6;min-height:100vh;overflow-x:hidden}
+#page404{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;gap:10px;text-align:center;padding:40px}
+#page404 .code{font-family:'Syne',sans-serif;font-size:clamp(80px,15vw,140px);font-weight:800;color:var(--dim);line-height:1;letter-spacing:-4px}
+#page404 .msg{font-size:13px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;font-family:'DM Mono',monospace}
+#authGate{display:none;align-items:center;justify-content:center;min-height:100vh;padding:40px}
+.auth-card{width:100%;max-width:400px;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:40px}
+.auth-logo{font-family:'Syne',sans-serif;font-size:10px;font-weight:700;letter-spacing:4px;text-transform:uppercase;color:var(--gold);margin-bottom:28px}
+.auth-card h2{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--text);margin-bottom:6px}
+.auth-card>p{font-size:13px;color:var(--muted);margin-bottom:28px}
+.fg{margin-bottom:14px}
+.fg label{display:block;font-size:10px;font-family:'DM Mono',monospace;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+.fg input{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:11px 14px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;outline:none;transition:border-color .2s,box-shadow .2s}
+.fg input:focus{border-color:var(--gold-dim);box-shadow:0 0 0 3px var(--gold-glow)}
+.btn-primary{width:100%;background:var(--gold);color:#08090a;border:none;border-radius:var(--r);padding:13px 24px;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;letter-spacing:.5px;cursor:pointer;transition:opacity .2s,transform .15s;margin-top:8px}
+.btn-primary:hover{opacity:.88;transform:translateY(-1px)}.btn-primary:active{transform:translateY(0)}.btn-primary:disabled{opacity:.35;cursor:not-allowed;transform:none}
+.auth-error{font-size:11px;color:var(--danger);margin-top:10px;text-align:center;min-height:16px;font-family:'DM Mono',monospace}
+#appShell{display:none}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:14px 40px;border-bottom:1px solid var(--border);background:rgba(8,9,10,.95);backdrop-filter:blur(12px);position:sticky;top:0;z-index:100}
+.topbar-brand{font-family:'Syne',sans-serif;font-size:10px;font-weight:700;letter-spacing:4px;text-transform:uppercase;color:var(--gold)}
+.topbar-right{display:flex;align-items:center;gap:18px}
+.topbar-user{font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.btn-logout{background:none;border:1px solid var(--border);border-radius:var(--r);padding:5px 13px;font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);cursor:pointer;transition:border-color .2s,color .2s;letter-spacing:.5px}
+.btn-logout:hover{border-color:var(--danger);color:var(--danger)}
+.main{max-width:960px;margin:0 auto;padding:48px 40px 80px}
+.eyebrow{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--gold);margin-bottom:6px}
+.page-title{font-family:'Syne',sans-serif;font-size:clamp(24px,4vw,38px);font-weight:800;color:var(--text);letter-spacing:-.5px;margin-bottom:4px}
+.page-desc{font-size:13px;color:var(--muted);margin-bottom:36px}
+.search-bar{display:flex;gap:10px;margin-bottom:40px}
+.search-bar input{flex:1;background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:13px 16px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;outline:none;transition:border-color .2s,box-shadow .2s}
+.search-bar input:focus{border-color:var(--gold-dim);box-shadow:0 0 0 3px var(--gold-glow)}
+.search-bar input::placeholder{color:var(--muted)}
+.btn-search{background:var(--gold);color:#08090a;border:none;border-radius:var(--r);padding:13px 26px;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;cursor:pointer;transition:opacity .2s;white-space:nowrap;letter-spacing:.3px}
+.btn-search:hover{opacity:.88}.btn-search:disabled{opacity:.35;cursor:not-allowed}
+.not-found{background:rgba(192,57,43,.06);border:1px solid rgba(192,57,43,.2);border-radius:var(--r);padding:14px 18px;font-family:'DM Mono',monospace;font-size:12px;color:#c0392b;letter-spacing:.5px}
+.client-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:26px 30px;margin-bottom:24px}
+.client-header{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:20px;padding-bottom:18px;border-bottom:1px solid var(--border)}
+.client-email{font-family:'DM Mono',monospace;font-size:10px;color:var(--gold);letter-spacing:1px;margin-bottom:3px}
+.client-name{font-family:'Syne',sans-serif;font-size:19px;font-weight:700;color:var(--text)}
+.badge{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;padding:3px 9px;border-radius:4px;white-space:nowrap}
+.badge-gold{background:rgba(212,168,83,.1);color:var(--gold);border:1px solid var(--gold-dim)}
+.badge-green{background:rgba(39,174,96,.08);color:#27ae60;border:1px solid rgba(39,174,96,.25)}
+.meta-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px}
+.meta-item label{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:3px}
+.meta-item p{font-size:13px;color:var(--text);line-height:1.45}
+.tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:2px}
+.tag{font-size:11px;font-family:'DM Mono',monospace;padding:2px 8px;background:var(--surface);border:1px solid var(--border);border-radius:4px;color:var(--muted)}
+.score-section{margin-bottom:24px}
+.score-label{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:var(--text);margin-bottom:14px}
+.score-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:10px;margin-bottom:14px}
+.score-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px 18px}
+.sc-lbl{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+.sc-val{font-family:'Syne',sans-serif;font-size:26px;font-weight:800;line-height:1}
+.sc-bar{height:3px;border-radius:2px;background:var(--border);margin-top:10px;overflow:hidden}
+.sc-fill{height:100%;border-radius:2px;transition:width .6s}
+.score-total{background:var(--card);border:1px solid var(--gold-dim);border-radius:10px;padding:20px 24px;display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:24px}
+.st-lbl{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--gold)}
+.st-num{font-family:'Syne',sans-serif;font-size:40px;font-weight:800;line-height:1}
+.st-desc{font-size:12px;color:var(--muted);margin-top:3px;font-style:italic}
+.alert-box{border-radius:var(--r);padding:11px 14px;margin-bottom:8px;font-size:12px;font-family:'DM Mono',monospace;line-height:1.6;letter-spacing:.2px}
+.alert-box:last-child{margin-bottom:0}
+.al-warn{background:rgba(230,126,34,.07);border:1px solid rgba(230,126,34,.2);color:#e67e22}
+.al-ok{background:rgba(39,174,96,.07);border:1px solid rgba(39,174,96,.2);color:#27ae60}
+.plan-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:28px 30px;margin-bottom:16px}
+.psec{font-family:'Syne',sans-serif;font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--gold);margin-bottom:16px;padding-bottom:10px;border-bottom:1px solid var(--border)}
+.pb{margin-bottom:18px}.pb:last-child{margin-bottom:0}
+.pb h4{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:var(--text);margin-bottom:6px}
+.pb p{font-size:13px;color:var(--text);line-height:1.75;opacity:.85}
+.pb ul{padding-left:18px;margin-top:6px}
+.pb li{font-size:13px;color:var(--text);line-height:1.7;opacity:.85;margin-bottom:3px}
+.pb strong{color:var(--gold);font-weight:500}
+.pillar-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin-top:8px}
+.pi{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:14px 16px}
+.pi-lbl{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--gold);margin-bottom:6px}
+.pi-txt{font-size:12px;color:var(--text);line-height:1.55;opacity:.8}
+.roadmap-item{display:flex;gap:16px;padding:14px 0;border-bottom:1px solid var(--border)}
+.roadmap-item:last-child{border-bottom:none}
+.rm-per{font-family:'DM Mono',monospace;font-size:10px;color:var(--gold);min-width:80px;padding-top:1px;letter-spacing:.5px}
+.rm-body h5{font-size:13px;font-weight:500;color:var(--text);margin-bottom:3px}
+.rm-body p{font-size:12px;color:var(--muted);line-height:1.55}
+.action-list{counter-reset:ac;padding:0;list-style:none}
+.action-list li{counter-increment:ac;display:flex;gap:12px;align-items:flex-start;padding:12px 0;border-bottom:1px solid var(--border);font-size:13px;line-height:1.6;color:var(--text);opacity:.85}
+.action-list li:last-child{border-bottom:none}
+.action-list li::before{content:counter(ac,'decimal-leading-zero');font-family:'DM Mono',monospace;font-size:10px;color:var(--gold);min-width:24px;padding-top:2px;opacity:.7;flex-shrink:0}
+.atag{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:1px;text-transform:uppercase;padding:2px 7px;border-radius:3px;white-space:nowrap;flex-shrink:0;margin-top:2px}
+.at-urgente{background:rgba(192,57,43,.1);color:#c0392b;border:1px solid rgba(192,57,43,.25)}
+.at-medio{background:rgba(230,126,34,.1);color:#e67e22;border:1px solid rgba(230,126,34,.25)}
+.at-longo{background:rgba(39,174,96,.1);color:#27ae60;border:1px solid rgba(39,174,96,.25)}
+.divider{border:none;border-top:1px solid var(--border);margin:24px 0}
+.actions-bar{display:flex;gap:8px;justify-content:flex-end;margin-top:4px}
+.btn-sec{background:transparent;border:1px solid var(--border);border-radius:var(--r);padding:8px 16px;font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);cursor:pointer;letter-spacing:.5px;transition:border-color .2s,color .2s}
+.btn-sec:hover{border-color:var(--muted);color:var(--text)}
+.toast{position:fixed;bottom:24px;right:24px;background:var(--card);border:1px solid var(--gold-dim);border-radius:var(--r);padding:11px 16px;font-size:12px;color:var(--text);z-index:999;transform:translateY(60px);opacity:0;transition:transform .3s,opacity .3s;max-width:280px;font-family:'DM Mono',monospace}
+.toast.show{transform:translateY(0);opacity:1}.toast.error{border-color:var(--danger)}
+@media(max-width:620px){.topbar{padding:12px 18px}.main{padding:28px 18px 60px}.search-bar{flex-direction:column}.client-card,.plan-card{padding:18px}.client-header{flex-direction:column;gap:10px}}
+@media print{.topbar,.search-bar,.actions-bar,#page404,#authGate{display:none!important}body{background:#fff;color:#000}.plan-card,.client-card,.score-card{border:1px solid #ccc;background:#fff}.sc-lbl,.eyebrow,.psec,.topbar-brand,.client-email,.rm-per,.pi-lbl,.st-lbl{color:#555}.sc-val,.st-num,.client-name,.page-title,.pb h4,.pb strong{color:#000}}
+</style>
+</head>
+<body>
+
+<div id="page404">
+  <div class="code">404</div>
+  <div class="msg">Página não encontrada</div>
+</div>
+
+<div id="authGate" style="display:none;align-items:center;justify-content:center;min-height:100vh;padding:40px">
+  <div class="auth-card">
+    <div class="auth-logo">Assent · Admin</div>
+    <h2>Acesso restrito</h2>
+    <p>Entre com sua conta para acessar o painel estratégico.</p>
+    <div class="fg"><label>E-mail</label><input type="email" id="loginEmail" placeholder="admin@seudominio.com" autocomplete="email"></div>
+    <div class="fg"><label>Senha</label><input type="password" id="loginPassword" placeholder="••••••••" autocomplete="current-password"></div>
+    <button class="btn-primary" id="btnLogin">Entrar</button>
+    <div class="auth-error" id="authError"></div>
+  </div>
+</div>
+
+<div id="appShell" style="display:none">
+  <header class="topbar">
+    <div class="topbar-brand">Assent · Painel Estratégico</div>
+    <div class="topbar-right">
+      <span class="topbar-user" id="userEmailEl"></span>
+      <button class="btn-logout" id="btnLogout">Sair</button>
+    </div>
+  </header>
+  <main class="main">
+    <p class="eyebrow">Central de Diagnósticos</p>
+    <h1 class="page-title">Plano Estratégico</h1>
+    <p class="page-desc">Busque um cliente pelo e-mail para visualizar avaliação e plano estratégico completo.</p>
+    <div class="search-bar">
+      <input type="email" id="searchEmail" placeholder="cliente@email.com" autocomplete="off">
+      <button class="btn-search" id="btnSearch">Buscar cliente</button>
+    </div>
+    <div id="resultArea" style="display:none">
+      <div id="notFoundMsg" class="not-found" style="display:none">Nenhum diagnóstico encontrado para este e-mail.</div>
+      <div id="clientCard"></div>
+      <div id="planArea"></div>
+      <div id="actionsBar" class="actions-bar" style="display:none">
+        <button class="btn-sec" id="btnPrint">Imprimir</button>
+        <button class="btn-sec" id="btnCopy">Copiar texto</button>
+      </div>
+    </div>
+  </main>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+import { initializeApp }                       from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
+import { getAuth, signInWithEmailAndPassword,
+         signOut, onAuthStateChanged }          from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
+import { getFirestore, doc, getDoc }           from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+
+const firebaseConfig={apiKey:"AIzaSyA_-9m8ijbS6QIxw7bVj-uFGMBXtmMhm6k",authDomain:"assent-sub-projetos.firebaseapp.com",projectId:"assent-sub-projetos",storageBucket:"assent-sub-projetos",messagingSenderId:"70164794065",appId:"1:970164794065:web:e9804a5f62c1ebfe004bf0"};
+const app=initializeApp(firebaseConfig),auth=getAuth(app),db=getFirestore(app);
+
+const $=(id)=>document.getElementById(id);
+const esc=(s)=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const trunc=(s,n=110)=>!s?'—':s.length>n?s.slice(0,n)+'…':s;
+
+function toast(msg,isErr=false){const t=$('toast');t.textContent=msg;t.className='toast'+(isErr?' error':'');t.classList.add('show');setTimeout(()=>t.classList.remove('show'),4500)}
+function sanitizeEmail(e){return e.toLowerCase().replace(/[^a-z0-9_-]/g,'_')}
+function setPage(p){$('page404').style.display=p==='404'?'flex':'none';$('authGate').style.display=p==='auth'?'flex':'none';$('appShell').style.display=p==='app'?'block':'none'}
+setPage('404');
+
+// ── AUTH ─────────────────────────────────────────────────────────────────────
+onAuthStateChanged(auth,async(user)=>{
+  if(!user){setPage('auth');return}
+  try{
+    const snap=await getDoc(doc(db,'licencas',user.uid));
+    if(!snap.exists()||snap.data().admin!==true){await signOut(auth);setPage('404');return}
+    $('userEmailEl').textContent=user.email;
+    setPage('app');
+  }catch(e){console.error('[auth]',e);await signOut(auth);setPage('404')}
+});
+
+$('btnLogin').addEventListener('click',async()=>{
+  const email=$('loginEmail').value.trim(),pass=$('loginPassword').value,errEl=$('authError'),btn=$('btnLogin');
+  errEl.textContent='';
+  if(!email||!pass){errEl.textContent='Preencha e-mail e senha.';return}
+  btn.disabled=true;btn.textContent='Entrando...';
+  try{await signInWithEmailAndPassword(auth,email,pass)}
+  catch(e){const m={'auth/user-not-found':'Usuário não encontrado.','auth/wrong-password':'Senha incorreta.','auth/invalid-email':'E-mail inválido.','auth/too-many-requests':'Muitas tentativas.','auth/invalid-credential':'Credenciais inválidas.'};errEl.textContent=m[e.code]||'Erro ao entrar.';btn.disabled=false;btn.textContent='Entrar'}
+});
+$('loginPassword').addEventListener('keydown',e=>{if(e.key==='Enter')$('btnLogin').click()});
+$('btnLogout').addEventListener('click',async()=>{await signOut(auth);reset();setPage('auth')});
+
+// ── BUSCA ─────────────────────────────────────────────────────────────────────
+function reset(){$('resultArea').style.display='none';$('notFoundMsg').style.display='none';$('clientCard').innerHTML='';$('planArea').innerHTML='';$('actionsBar').style.display='none'}
+
+$('btnSearch').addEventListener('click',searchClient);
+$('searchEmail').addEventListener('keydown',e=>{if(e.key==='Enter')searchClient()});
+
+async function searchClient(){
+  const raw=$('searchEmail').value.trim();
+  if(!raw){toast('Digite um e-mail.',true);return}
+  const btn=$('btnSearch');btn.disabled=true;btn.textContent='Buscando…';
+  reset();$('resultArea').style.display='block';
+  try{
+    const snap=await getDoc(doc(db,'formularios',sanitizeEmail(raw)));
+    if(!snap.exists()){$('notFoundMsg').style.display='block'}
+    else{const d=snap.data();renderClient(d,raw);renderPlan(d);$('actionsBar').style.display='flex'}
+  }catch(e){console.error('[search]',e);toast('Erro ao buscar: '+(e?.message||'verifique sua conexão.'),true)}
+  finally{btn.disabled=false;btn.textContent='Buscar cliente'}
+}
+
+// ── RENDER CLIENTE ─────────────────────────────────────────────────────────────
+function renderClient(d,emailRaw){
+  const pTags=(d.percepcaoDesejada||[]).map(t=>`<span class="tag">${esc(t)}</span>`).join('');
+  const iTags=(d.objetivoInstagram||[]).map(t=>`<span class="tag">${esc(t)}</span>`).join('');
+  $('clientCard').innerHTML=`
+  <div class="client-card">
+    <div class="client-header">
+      <div><div class="client-email">${esc(emailRaw)}</div><div class="client-name">${esc(d.produtoPrincipal||d.oQueVende||'Cliente')}</div></div>
+      <div style="display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end">
+        ${d.tomComunicacao?`<span class="badge badge-gold">${esc(d.tomComunicacao)}</span>`:''}
+        <span class="badge badge-green">Diagnóstico recebido</span>
+      </div>
+    </div>
+    <div class="meta-grid">
+      <div class="meta-item"><label>Missão</label><p>${esc(trunc(d.missao))}</p></div>
+      <div class="meta-item"><label>Visão</label><p>${esc(trunc(d.visao))}</p></div>
+      <div class="meta-item"><label>Propósito</label><p>${esc(trunc(d.proposito))}</p></div>
+      <div class="meta-item"><label>Diferencial</label><p>${esc(trunc(d.diferencial))}</p></div>
+      <div class="meta-item"><label>Produto principal</label><p>${esc(d.produtoPrincipal||'—')}</p></div>
+      <div class="meta-item"><label>Sucesso em 6 meses</label><p>${esc(trunc(d.sucesso6meses))}</p></div>
+      <div class="meta-item" style="grid-column:1/-1"><label>Percepção desejada</label><div class="tags">${pTags||'<span class="tag">não informado</span>'}</div></div>
+      <div class="meta-item" style="grid-column:1/-1"><label>Objetivo no Instagram</label><div class="tags">${iTags||'<span class="tag">não informado</span>'}</div></div>
+    </div>
+  </div>`
+}
+
+// ── MOTOR DE AVALIAÇÃO ─────────────────────────────────────────────────────────
+
+function avaliar(criterios){
+  const gaps=[];let s=0;
+  criterios.forEach(c=>{if(c.ok){s+=c.pts}else{gaps.push(c.gap)}});
+  return{score:s,gaps};
+}
+
+function classif(n){
+  if(n>=85)return{label:'Excelente',cor:'#27ae60'};
+  if(n>=70)return{label:'Bom',cor:'#d4a853'};
+  if(n>=50)return{label:'Regular',cor:'#e67e22'};
+  return{label:'Crítico',cor:'#c0392b'};
+}
+
+function len(s,n){return s&&String(s).trim().length>=n}
+
+function avaliarEixos(d){
+  const p=d.personalidade||{};
+  const pers=Object.values(p).filter(v=>v!==undefined&&v!==3);
+
+  const identidade=avaliar([
+    {ok:len(d.missao,20),   pts:25,gap:'missão não declarada ou muito curta'},
+    {ok:len(d.visao,20),    pts:20,gap:'visão de futuro ausente'},
+    {ok:len(d.valores,10),  pts:15,gap:'valores da marca não definidos'},
+    {ok:len(d.proposito,20),pts:20,gap:'propósito não articulado'},
+    {ok:len(d.adjetivos,5), pts:20,gap:'adjetivos de marca não listados'},
+  ]);
+  identidade.score=Math.min(100,identidade.score);
+
+  const posicionamento=avaliar([
+    {ok:len(d.diferencial,20),    pts:30,gap:'diferencial competitivo não definido'},
+    {ok:len(d.porqueEscolher,20), pts:25,gap:'razão de escolha não articulada'},
+    {ok:len(d.oQueAEmpresaFaz,15),pts:20,gap:'escopo de atuação vago'},
+    {ok:(d.percepcaoDesejada||[]).length>=2,pts:25,gap:'percepção desejada não mapeada'},
+  ]);
+  posicionamento.score=Math.min(100,posicionamento.score);
+
+  const comunicacao=avaliar([
+    {ok:!!d.tomComunicacao,    pts:30,gap:'tom de comunicação não definido'},
+    {ok:!!d.linguagem,         pts:25,gap:'nível de linguagem não definido'},
+    {ok:!!d.parecerMais,       pts:20,gap:'referência de marca não escolhida'},
+    {ok:pers.length>=3,        pts:25,gap:'personalidade de marca pouco definida (sliders no centro)'},
+  ]);
+  comunicacao.score=Math.min(100,comunicacao.score);
+
+  const produto=avaliar([
+    {ok:len(d.produtoPrincipal,5),    pts:25,gap:'produto/serviço principal não nomeado'},
+    {ok:len(d.oQueVende,10),          pts:20,gap:'descrição do que vende ausente'},
+    {ok:len(d.diferenciaisServico,10),pts:25,gap:'diferenciais do serviço não descritos'},
+    {ok:len(d.atendimento,5),         pts:15,gap:'modelo de atendimento não descrito'},
+    {ok:len(d.comoVender,3),          pts:15,gap:'canais de venda não definidos'},
+  ]);
+  produto.score=Math.min(100,produto.score);
+
+  const digital=avaliar([
+    {ok:(d.objetivoInstagram||[]).length>=3,     pts:30,gap:'objetivos no Instagram não selecionados'},
+    {ok:len(d.sucesso6meses,15),                 pts:25,gap:'meta de 6 meses não descrita'},
+    {ok:Number(d.clientesPorMes)>0,              pts:20,gap:'meta de clientes mensais não definida'},
+    {ok:d.possuiLogotipo==='sim',                pts:15,gap:'logotipo profissional ausente'},
+    {ok:len(d.coresMarca,3),                     pts:10,gap:'paleta de cores não descrita'},
+  ]);
+  digital.score=Math.min(100,digital.score);
+
+  return{identidade,posicionamento,comunicacao,produto,digital};
+}
+
+// ── CONTEÚDO DO PLANO ──────────────────────────────────────────────────────────
+
+function gerarPosicionamento(d){
+  const dif=d.diferencial||d.porqueEscolher||'ainda não documentado';
+  const prod=d.produtoPrincipal||d.oQueVende||'seu produto';
+  const perc=(d.percepcaoDesejada||[]).join(', ')||'a definir';
+  return`<ul>
+    <li><strong>Percepção desejada:</strong> ${esc(perc)}</li>
+    <li><strong>Produto central:</strong> ${esc(prod)}</li>
+    <li><strong>Diferencial principal:</strong> ${esc(trunc(dif,180))}</li>
+    ${d.porqueEscolher?`<li><strong>Por que escolher:</strong> ${esc(trunc(d.porqueEscolher,180))}</li>`:''}
+  </ul>
+  <p style="margin-top:10px;font-size:13px;opacity:.75">Toda comunicação da marca deve reforçar consistentemente esses atributos.</p>`;
+}
+
+function gerarTomItens(d){
+  const p=d.personalidade||{};
+  const linhas=[];
+  if(p.divertida_seria!=null) linhas.push(p.divertida_seria<=2?'Comunicação leve e bem-humorada':p.divertida_seria>=4?'Tom sério e profissional':'Equilíbrio entre descontração e seriedade');
+  if(p.proxima_formal!=null)  linhas.push(p.proxima_formal<=2?'Abordagem próxima — tutear o cliente':p.proxima_formal>=4?'Linguagem formal e respeitosa':'Tom neutro e respeitoso');
+  if(p.moderna_tradicional!=null) linhas.push(p.moderna_tradicional<=2?'Visual e texto contemporâneos':p.moderna_tradicional>=4?'Referências clássicas e atemporais':'Modernidade com raízes sólidas');
+  if(p.especialista_amiga!=null)  linhas.push(p.especialista_amiga<=2?'Posicione-se como autoridade técnica':p.especialista_amiga>=4?'Seja a marca parceira e acolhedora':'Combine expertise com proximidade');
+  return linhas;
+}
+
+function gerarPilares(d){
+  const objs=d.objetivoInstagram||[];
+  const prod=d.produtoPrincipal||d.oQueVende||'produto';
+  const pilares=[{label:'Produto & Serviço',text:`Posts apresentando ${esc(prod)}, processos, bastidores e resultados entregues.`}];
+  if(objs.some(o=>/vend|conversão/i.test(o))) pilares.push({label:'Conversão & Oferta',text:'Stories e posts de oferta direta, prova social, depoimentos e chamadas para contato.'});
+  if(objs.some(o=>/autoridade|posicion/i.test(o))) pilares.push({label:'Autoridade',text:'Conteúdos educativos, dados do mercado, opiniões da marca e bastidores do processo.'});
+  if(objs.some(o=>/comunidade|engajamento/i.test(o))) pilares.push({label:'Comunidade',text:'Interação nos stories, caixinhas de perguntas, enquetes e conteúdos sobre o universo do cliente.'});
+  if(objs.some(o=>/awareness|conhecimento|alcance/i.test(o))) pilares.push({label:'Awareness',text:'Reels de impacto, colaborações, conteúdos compartilháveis e trending topics do nicho.'});
+  if(d.tomComunicacao) pilares.push({label:'Editorial de Marca',text:`Conteúdos que reforçam o tom <em>${esc(d.tomComunicacao)}</em> — estética, frases, valores e propósito.`});
+  return pilares.slice(0,5);
+}
+
+function gerarRoadmap(d){
+  const meta=d.sucesso6meses||'atingir os objetivos declarados no diagnóstico';
+  const clientes=d.clientesPorMes?`${d.clientesPorMes} clientes/mês`:'meta de clientes definida';
+  return[
+    {period:'Mês 01–02',title:'Fundação',desc:`Finalizar identidade visual e posicionamento. Regularizar publicação no Instagram. Criar templates de comunicação no tom ${esc(d.tomComunicacao||'definido')}.`},
+    {period:'Mês 02–03',title:'Ativação',desc:`Lançar conteúdo nos pilares estratégicos. Iniciar captação ativa. Meta: ${clientes}. Coletar primeiros depoimentos para prova social.`},
+    {period:'Mês 03–05',title:'Crescimento',desc:`Otimizar formatos com base em métricas. Testar canais de aquisição. Ampliar alcance com Reels e parcerias estratégicas.`},
+    {period:'Mês 05–06',title:'Consolidação',desc:`Revisar métricas vs. meta declarada. Resultado esperado: ${esc(trunc(meta,120))}.`},
+  ];
+}
+
+function gerarAcoes(d,allGaps){
+  const ac=[];
+  if(allGaps.some(g=>/missão|visão|propósito/.test(g))) ac.push({text:'Completar fundação estratégica da marca (missão, visão, propósito) em workshop de 2h com o fundador.',prazo:'urgente'});
+  if(allGaps.some(g=>/diferencial/.test(g))) ac.push({text:'Escrever o diferencial competitivo em uma frase clara, específica e memorável.',prazo:'urgente'});
+  if(!d.possuiLogotipo||d.possuiLogotipo==='nao') ac.push({text:'Criar identidade visual profissional: logotipo, paleta de cores e tipografia.',prazo:'urgente'});
+  if(allGaps.some(g=>/tom|linguagem/.test(g))) ac.push({text:'Definir tom de voz e criar mini-guia de comunicação com exemplos reais de posts.',prazo:'urgente'});
+  ac.push({text:'Criar calendário editorial para o Instagram com os pilares estratégicos do plano.',prazo:'medio'});
+  ac.push({text:'Mapear os 3 melhores depoimentos de clientes e criar posts de prova social.',prazo:'medio'});
+  ac.push({text:'Otimizar perfil no Instagram: bio com proposta de valor, destaques organizados e link de contato.',prazo:'medio'});
+  ac.push({text:'Definir KPIs mensais: seguidores, alcance, leads gerados e conversões.',prazo:'longo'});
+  if(len(d.atendimento,5)) ac.push({text:'Documentar fluxo de atendimento em SOP para escalar sem perder qualidade.',prazo:'longo'});
+  return ac.slice(0,7);
+}
+
+// ── RENDER PLANO ───────────────────────────────────────────────────────────────
+function renderPlan(d){
+  const eixos=avaliarEixos(d);
+  const nomes=['identidade','posicionamento','comunicacao','produto','digital'];
+  const labels=['Identidade','Posicionamento','Comunicação','Produto','Presença Digital'];
+  const total=Math.round(nomes.reduce((s,k)=>s+eixos[k].score,0)/nomes.length);
+  const tc=classif(total);
+  const allGaps=nomes.flatMap(k=>eixos[k].gaps);
+
+  const scoreCards=nomes.map((k,i)=>{
+    const e=eixos[k];const cl=classif(e.score);
+    return`<div class="score-card"><div class="sc-lbl">${labels[i]}</div><div class="sc-val" style="color:${cl.cor}">${e.score}<span style="font-size:14px;font-weight:400;color:var(--muted)">/100</span></div><div class="sc-bar"><div class="sc-fill" style="width:${e.score}%;background:${cl.cor}"></div></div></div>`;
+  }).join('');
+
+  const alertsHtml=allGaps.length
+    ?allGaps.slice(0,5).map(g=>`<div class="alert-box al-warn">⚠ ${esc(g)}</div>`).join('')
+    :`<div class="alert-box al-ok">✓ Todos os campos estratégicos preenchidos.</div>`;
+
+  const tomLinhas=gerarTomItens(d).map(l=>`<li>${l}</li>`).join('');
+  const pilares=gerarPilares(d).map(p=>`<div class="pi"><div class="pi-lbl">${p.label}</div><div class="pi-txt">${p.text}</div></div>`).join('');
+  const roadmapHtml=gerarRoadmap(d).map(r=>`<div class="roadmap-item"><div class="rm-per">${r.period}</div><div class="rm-body"><h5>${r.title}</h5><p>${r.desc}</p></div></div>`).join('');
+  const acoes=gerarAcoes(d,allGaps);
+  const acoesHtml=acoes.map(a=>{const tc=a.prazo==='urgente'?'at-urgente':a.prazo==='medio'?'at-medio':'at-longo';const tl=a.prazo==='urgente'?'Imediato':a.prazo==='medio'?'Curto prazo':'Médio prazo';return`<li><span>${esc(a.text)}</span><span class="atag ${tc}">${tl}</span></li>`}).join('');
+
+  $('planArea').innerHTML=`
+  <!-- SCORES -->
+  <div class="score-section">
+    <div class="score-label">Avaliação por Eixo Estratégico</div>
+    <div class="score-grid">${scoreCards}</div>
+    <div class="score-total">
+      <div>
+        <div class="st-lbl">Score Geral</div>
+        <div class="st-num" style="color:${tc.cor}">${total}</div>
+        <div class="st-desc">${tc.label} — ${allGaps.length} gap${allGaps.length!==1?'s':''} identificado${allGaps.length!==1?'s':''}</div>
+      </div>
+      <div style="flex:1;max-width:440px">${alertsHtml}</div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- 01 POSICIONAMENTO -->
+  <div class="plan-card">
+    <div class="psec">01 — Posicionamento Estratégico</div>
+    <div class="pb"><h4>Proposta de posicionamento</h4>${gerarPosicionamento(d)}</div>
+    <div class="pb"><h4>Fundação da marca</h4><ul>
+      ${d.proposito?`<li><strong>Propósito:</strong> ${esc(trunc(d.proposito,200))}</li>`:''}
+      ${d.missao?`<li><strong>Missão:</strong> ${esc(trunc(d.missao,200))}</li>`:''}
+      ${d.visao?`<li><strong>Visão:</strong> ${esc(trunc(d.visao,200))}</li>`:''}
+      ${d.valores?`<li><strong>Valores:</strong> ${esc(trunc(d.valores,200))}</li>`:''}
+    </ul></div>
+    ${eixos.posicionamento.gaps.length?`<div class="pb"><h4>Pontos a fortalecer</h4><ul>${eixos.posicionamento.gaps.map(g=>`<li>${esc(g)}</li>`).join('')}</ul></div>`:''}
+  </div>
+
+  <!-- 02 COMUNICAÇÃO -->
+  <div class="plan-card">
+    <div class="psec">02 — Tom de Voz & Comunicação</div>
+    <div class="pb"><h4>Perfil de comunicação definido</h4><ul>
+      ${d.tomComunicacao?`<li><strong>Tom:</strong> ${esc(d.tomComunicacao)}</li>`:''}
+      ${d.linguagem?`<li><strong>Linguagem:</strong> ${esc(d.linguagem)}</li>`:''}
+      ${d.parecerMais?`<li><strong>Referência de marca:</strong> ${esc(d.parecerMais)}</li>`:''}
+      ${tomLinhas}
+    </ul></div>
+    ${d.adjetivos?`<div class="pb"><h4>Adjetivos da marca</h4><p>${esc(d.adjetivos)}</p></div>`:''}
+    ${eixos.comunicacao.gaps.length?`<div class="pb"><h4>O que ainda precisa ser definido</h4><ul>${eixos.comunicacao.gaps.map(g=>`<li>${esc(g)}</li>`).join('')}</ul></div>`:''}
+  </div>
+
+  <!-- 03 PRODUTO -->
+  <div class="plan-card">
+    <div class="psec">03 — Produto & Serviço</div>
+    <div class="pb"><h4>Portfólio declarado</h4><ul>
+      ${d.produtoPrincipal?`<li><strong>Principal:</strong> ${esc(d.produtoPrincipal)}</li>`:''}
+      ${d.produtosSecundarios?`<li><strong>Secundários:</strong> ${esc(d.produtosSecundarios)}</li>`:''}
+      ${d.diferenciaisServico?`<li><strong>Diferenciais do serviço:</strong> ${esc(d.diferenciaisServico)}</li>`:''}
+      ${d.atendimento?`<li><strong>Atendimento:</strong> ${esc(d.atendimento)}</li>`:''}
+      ${d.comoVender?`<li><strong>Canais de venda:</strong> ${esc(d.comoVender)}</li>`:''}
+    </ul></div>
+    ${eixos.produto.gaps.length?`<div class="pb"><h4>Lacunas no portfólio</h4><ul>${eixos.produto.gaps.map(g=>`<li>${esc(g)}</li>`).join('')}</ul></div>`:''}
+  </div>
+
+  <!-- 04 CONTEÚDO -->
+  <div class="plan-card">
+    <div class="psec">04 — Estratégia de Conteúdo — Instagram</div>
+    <div class="pb"><h4>Pilares editoriais</h4><div class="pillar-grid">${pilares}</div></div>
+    <div class="pb"><h4>Cadência sugerida</h4><ul>
+      <li><strong>Feed:</strong> 3–4 posts/semana (carrossel educativo + imagem de produto)</li>
+      <li><strong>Stories:</strong> Diariamente — bastidores, enquetes e depoimentos</li>
+      <li><strong>Reels:</strong> 1–2/semana — posicionamento e ampliação de alcance</li>
+    </ul></div>
+    ${eixos.digital.gaps.length?`<div class="pb"><h4>Pontos de atenção digital</h4><ul>${eixos.digital.gaps.map(g=>`<li>${esc(g)}</li>`).join('')}</ul></div>`:''}
+  </div>
+
+  <!-- 05 ROADMAP -->
+  <div class="plan-card">
+    <div class="psec">05 — Roadmap — Próximos 6 Meses</div>
+    <div>${roadmapHtml}</div>
+  </div>
+
+  <!-- 06 AÇÕES -->
+  <div class="plan-card">
+    <div class="psec">06 — Ações Prioritárias</div>
+    <ol class="action-list">${acoesHtml}</ol>
+  </div>`;
+
+  $('planArea').style.display='block';
+}
+
+// ── AÇÕES DO PAINEL ────────────────────────────────────────────────────────────
+$('btnPrint').addEventListener('click',()=>window.print());
+$('btnCopy').addEventListener('click',()=>{
+  navigator.clipboard.writeText($('planArea').innerText)
+    .then(()=>toast('Plano copiado!'))
+    .catch(()=>toast('Erro ao copiar.',true));
+});
+</script>
+</body>
+</html>
