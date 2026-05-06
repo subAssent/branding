@@ -170,26 +170,60 @@ const trunc=(s,n=110)=>!s?'—':s.length>n?s.slice(0,n)+'…':s;
 
 function toast(msg,isErr=false){const t=$('toast');t.textContent=msg;t.className='toast'+(isErr?' error':'');t.classList.add('show');setTimeout(()=>t.classList.remove('show'),4500)}
 function sanitizeEmail(e){return e.toLowerCase().replace(/[^a-z0-9_-]/g,'_')}
-function setPage(p){$('page404').style.display=p==='404'?'flex':'none';$('authGate').style.display=p==='auth'?'flex':'none';$('appShell').style.display=p==='app'?'block':'none'}
-setPage('404');
+// Estado inicial: tudo oculto enquanto SDK resolve a sessão
+function setPage(p){
+  $('page404').style.display  = p==='404'  ? 'flex'  : 'none';
+  $('authGate').style.display = p==='auth' ? 'flex'  : 'none';
+  $('appShell').style.display = p==='app'  ? 'block' : 'none';
+}
+// Começa com tudo oculto — body já tem fundo escuro, parece carregando
+$('page404').style.display='none';
+$('authGate').style.display='none';
+$('appShell').style.display='none';
 
 // ── AUTH ─────────────────────────────────────────────────────────────────────
-// Aguarda o SDK restaurar sessão (IndexedDB). user !== null garante token disponível.
+// onAuthStateChanged aguarda o SDK restaurar sessão do IndexedDB.
+// Só então decide qual tela mostrar — nunca antes disso.
 onAuthStateChanged(auth, async (user) => {
-  if (!user || !user.uid) { setPage('auth'); return; }
+  // Sem sessão ativa → tela de login
+  if (!user || !user.uid) {
+    setPage('auth');
+    return;
+  }
+
+  // Sessão ativa → verifica licença no Firestore
   try {
-    // Garante token válido antes de qualquer leitura no Firestore
-    await user.getIdToken(false);
     const snap = await getDoc(doc(db, 'licencas', user.uid));
+
     if (!snap.exists() || snap.data().admin !== true) {
-      await signOut(auth); setPage('404'); return;
+      // Usuário autenticado mas sem licença de admin → 404
+      console.warn('[auth] Sem licença de admin para uid:', user.uid);
+      await signOut(auth);
+      setPage('404');
+      return;
     }
+
+    // Tudo certo → exibe painel
     $('userEmailEl').textContent = user.email;
     setPage('app');
+
   } catch(e) {
-    // Permissão negada ou rede → 404 silencioso, nunca expõe o painel
-    console.error('[auth] licenca:', e.code || e.message);
-    await signOut(auth); setPage('404');
+    // Erro de permissão Firestore → provavelmente regra não configurada ainda
+    // Mostra login em vez de 404 para não bloquear o admin legítimo
+    console.error('[auth] Erro ao verificar licença:', e.code, e.message);
+    if (e.code === 'permission-denied') {
+      // Regras do Firestore bloqueando → sinaliza para o admin
+      await signOut(auth);
+      setPage('auth');
+      // Mostra mensagem útil em vez de 404 silencioso
+      setTimeout(() => {
+        const errEl = $('authError');
+        if (errEl) errEl.textContent = 'Erro de permissão: configure as regras do Firestore.';
+      }, 100);
+    } else {
+      await signOut(auth);
+      setPage('404');
+    }
   }
 });
 
