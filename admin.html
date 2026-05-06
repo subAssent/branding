@@ -174,14 +174,23 @@ function setPage(p){$('page404').style.display=p==='404'?'flex':'none';$('authGa
 setPage('404');
 
 // ── AUTH ─────────────────────────────────────────────────────────────────────
-onAuthStateChanged(auth,async(user)=>{
-  if(!user){setPage('auth');return}
-  try{
-    const snap=await getDoc(doc(db,'licencas',user.uid));
-    if(!snap.exists()||snap.data().admin!==true){await signOut(auth);setPage('404');return}
-    $('userEmailEl').textContent=user.email;
+// Aguarda o SDK restaurar sessão (IndexedDB). user !== null garante token disponível.
+onAuthStateChanged(auth, async (user) => {
+  if (!user || !user.uid) { setPage('auth'); return; }
+  try {
+    // Garante token válido antes de qualquer leitura no Firestore
+    await user.getIdToken(false);
+    const snap = await getDoc(doc(db, 'licencas', user.uid));
+    if (!snap.exists() || snap.data().admin !== true) {
+      await signOut(auth); setPage('404'); return;
+    }
+    $('userEmailEl').textContent = user.email;
     setPage('app');
-  }catch(e){console.error('[auth]',e);await signOut(auth);setPage('404')}
+  } catch(e) {
+    // Permissão negada ou rede → 404 silencioso, nunca expõe o painel
+    console.error('[auth] licenca:', e.code || e.message);
+    await signOut(auth); setPage('404');
+  }
 });
 
 $('btnLogin').addEventListener('click',async()=>{
